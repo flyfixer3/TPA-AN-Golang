@@ -1,0 +1,91 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type User{
+  id:String!
+  name:String!
+  email:String!
+  profile_pict:String!
+  channel_background:String!
+  premium:Boolean!  
+  created_at:Timestamp!
+  updated_at:Timestamp!
+}
+
+type Comment{
+  id:String!
+  user_id:String!
+  video_id:String!
+  parent_id:String!
+  user:User!
+  comment:String!
+  created_at:Timestamp!
+  updated_at:Timestamp!
+}
+
+input NewComment{
+  user_id:String!
+  video_id:String!
+  parent_id:String!
+  comment:String!
+}
+
+input NewUser{
+  name:String!
+  email:String!
+  profile_pict:String!
+  channel_background:String!
+  premium:Boolean!
+}
+
+type Location{
+  id:String!
+  name:String!
+  created_at:Timestamp!
+  updated_at:Timestamp!
+}
+
+type Video{
+  id:String!
+  user:User!
+  location:Location!
+  title:String!
+  thumbnail:String!
+  link:String!
+  description:String
+  restriction:String!
+  view:Int!
+  created_at:Timestamp!
+  updated_at:Timestamp!
+}
+
+input NewVideo {
+  user_id:String!
+  location_id:String!
+  title:String!
+  thumbnail:String!
+  link:String!
+  view:Int!
+  description:String
+  restriction:Boolean!
+}
+
+type Query{
+  videos: [Video]
+  findUser(email:String!): User
+  users: [User]
+  commentsByVideoId(id:String!):[Comment]
+}
+
+type Mutation{
+  createUser(input: NewUser!): User!
+  createVideo(input: NewVideo!): Video!
+  updateVideo(id:String!, input: NewVideo!): Video!
+  deleteVideo(id:String!): Boolean!
+  createComment(input: NewComment!): Comment!
+  updateComment(id:String!, input: NewComment!): Comment!
+  deleteComment(id:String!): Boolean!
+}
+
+scalar Timestamp
