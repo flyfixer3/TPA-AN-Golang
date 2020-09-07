@@ -78,3 +78,7 @@ type NewVideo struct {
 	Description *string `json:"description"`
 	Restriction bool    `json:"restriction"`
 }
+
+type UpdatePriority struct {
+	Priority int `json:"priority"`
+}

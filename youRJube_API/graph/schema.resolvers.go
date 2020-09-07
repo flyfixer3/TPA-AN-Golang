@@ -143,6 +143,19 @@ func (r *mutationResolver) InsertVideoOnPlaylist(ctx context.Context, input mode
 	return true, nil
 }
 
+func (r *mutationResolver) UpdateVideoOnPlaylist(ctx context.Context, playlistID string, videoID string, input model.UpdatePriority) (bool, error) {
+	db, err := database.GetDatabase()
+	if err != nil {
+		log.Println("Unable to connect to database", err)
+		return false, err
+	}
+	defer db.Close()
+	var updatedPlaylistDetails model.PlaylistDetail
+	db.Model(&updatedPlaylistDetails).Where("playlist_id = ? AND video_id = ?", playlistID, videoID).Update("priority", input.Priority)
+
+	return true, nil
+}
+
 func (r *mutationResolver) UpdatePlaylist(ctx context.Context, playlistID string, input model.NewPlaylist) (bool, error) {
 	db, err := database.GetDatabase()
 	if err != nil {
@@ -379,10 +392,6 @@ func (r *mutationResolver) DeleteComment(ctx context.Context, id string) (bool, 
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *playlistDetailResolver) Videos(ctx context.Context, obj *model.PlaylistDetail) (*model.Video, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
 func (r *queryResolver) Videos(ctx context.Context) ([]*model.Video, error) {
 	db, err := database.GetDatabase()
 	if err != nil {
@@ -457,7 +466,7 @@ func (r *queryResolver) GetVideoPriorityByPlaylistID(ctx context.Context, playli
 		return nil, err
 	}
 	defer db.Close()
-	db.Preload("Video.User").Where("playlist_id = ? ", playlistID).Order("priority asc").First(&r.playlistDetails)
+	db.Preload("Video.User").Where("playlist_id = ? ", playlistID).Order("priority asc").Find(&r.playlistDetails)
 
 	return r.playlistDetails, nil
 }
@@ -498,16 +507,10 @@ func (r *queryResolver) CommentsByVideoID(ctx context.Context, id string) ([]*mo
 // Mutation returns generated.MutationResolver implementation.
 func (r *Resolver) Mutation() generated.MutationResolver { return &mutationResolver{r} }
 
-// PlaylistDetail returns generated.PlaylistDetailResolver implementation.
-func (r *Resolver) PlaylistDetail() generated.PlaylistDetailResolver {
-	return &playlistDetailResolver{r}
-}
-
 // Query returns generated.QueryResolver implementation.
 func (r *Resolver) Query() generated.QueryResolver { return &queryResolver{r} }
 
 type mutationResolver struct{ *Resolver }
-type playlistDetailResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 
 // !!! WARNING !!!
@@ -516,6 +519,12 @@ type queryResolver struct{ *Resolver }
 //  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //    it when you're done.
 //  - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *playlistDetailResolver) Videos(ctx context.Context, obj *model.PlaylistDetail) (*model.Video, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+type playlistDetailResolver struct{ *Resolver }
+
 func (r *postResolver) Title(ctx context.Context, obj *model.Post) (string, error) {
 	panic(fmt.Errorf("not implemented"))
 }

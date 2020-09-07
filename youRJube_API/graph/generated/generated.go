@@ -8,7 +8,6 @@ import (
 	"errors"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 	"yourJube_API/graph/model"
 
@@ -37,7 +36,6 @@ type Config struct {
 
 type ResolverRoot interface {
 	Mutation() MutationResolver
-	PlaylistDetail() PlaylistDetailResolver
 	Query() QueryResolver
 }
 
@@ -120,6 +118,7 @@ type ComplexityRoot struct {
 		UpdatePlaylist          func(childComplexity int, playlistID string, input model.NewPlaylist) int
 		UpdateSubscriber        func(childComplexity int, input model.NewSubscriber) int
 		UpdateVideo             func(childComplexity int, id string, input model.NewVideo) int
+		UpdateVideoOnPlaylist   func(childComplexity int, playlistID string, videoID string, input model.UpdatePriority) int
 	}
 
 	Playlist struct {
@@ -140,8 +139,8 @@ type ComplexityRoot struct {
 		PlaylistID func(childComplexity int) int
 		Priority   func(childComplexity int) int
 		UpdatedAt  func(childComplexity int) int
+		Video      func(childComplexity int) int
 		VideoID    func(childComplexity int) int
-		Videos     func(childComplexity int) int
 	}
 
 	Post struct {
@@ -217,6 +216,7 @@ type MutationResolver interface {
 	CreatePost(ctx context.Context, input model.NewPost) (*model.Post, error)
 	CreateSavePlaylist(ctx context.Context, playlistID string, userID string) (bool, error)
 	InsertVideoOnPlaylist(ctx context.Context, input model.NewPlaylistDetail) (bool, error)
+	UpdateVideoOnPlaylist(ctx context.Context, playlistID string, videoID string, input model.UpdatePriority) (bool, error)
 	UpdatePlaylist(ctx context.Context, playlistID string, input model.NewPlaylist) (bool, error)
 	UpdateFeedbackOnComment(ctx context.Context, input model.NewLikeComment) (bool, error)
 	UpdateFeedbackOnVideo(ctx context.Context, input model.NewLikeVideo) (bool, error)
@@ -236,9 +236,6 @@ type MutationResolver interface {
 	CreateComment(ctx context.Context, input model.NewComment) (*model.Comment, error)
 	UpdateComment(ctx context.Context, id string, input model.NewComment) (*model.Comment, error)
 	DeleteComment(ctx context.Context, id string) (bool, error)
-}
-type PlaylistDetailResolver interface {
-	Videos(ctx context.Context, obj *model.PlaylistDetail) (*model.Video, error)
 }
 type QueryResolver interface {
 	Videos(ctx context.Context) ([]*model.Video, error)
@@ -815,6 +812,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.UpdateVideo(childComplexity, args["id"].(string), args["input"].(model.NewVideo)), true
 
+	case "Mutation.updateVideoOnPlaylist":
+		if e.complexity.Mutation.UpdateVideoOnPlaylist == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateVideoOnPlaylist_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateVideoOnPlaylist(childComplexity, args["playlist_id"].(string), args["video_id"].(string), args["input"].(model.UpdatePriority)), true
+
 	case "Playlist.created_at":
 		if e.complexity.Playlist.CreatedAt == nil {
 			break
@@ -913,19 +922,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PlaylistDetail.UpdatedAt(childComplexity), true
 
+	case "PlaylistDetail.video":
+		if e.complexity.PlaylistDetail.Video == nil {
+			break
+		}
+
+		return e.complexity.PlaylistDetail.Video(childComplexity), true
+
 	case "PlaylistDetail.video_id":
 		if e.complexity.PlaylistDetail.VideoID == nil {
 			break
 		}
 
 		return e.complexity.PlaylistDetail.VideoID(childComplexity), true
-
-	case "PlaylistDetail.videos":
-		if e.complexity.PlaylistDetail.Videos == nil {
-			break
-		}
-
-		return e.complexity.PlaylistDetail.Videos(childComplexity), true
 
 	case "Post.created_at":
 		if e.complexity.Post.CreatedAt == nil {
@@ -1538,11 +1547,15 @@ input NewPlaylistDetail{
 	video_id:String!
   priority:Int!
 }
+
+input updatePriority{
+  priority:Int!
+}
 type PlaylistDetail{
   playlist_id:String!
 	video_id:String!
 	priority:Int!    
-  videos:Video!
+  video:Video!
 	created_at:Timestamp!
   updated_at:Timestamp!
 }
@@ -1579,6 +1592,7 @@ type Mutation{
   createPost(input: NewPost!): Post! 
   createSavePlaylist(playlist_id:String!, user_id:String!): Boolean! 
   insertVideoOnPlaylist(input: NewPlaylistDetail!): Boolean! 
+  updateVideoOnPlaylist(playlist_id:String!, video_id:String!, input:updatePriority!): Boolean!
   updatePlaylist(playlist_id:String!, input: NewPlaylist!): Boolean!
   updateFeedbackOnComment(input: NewLikeComment!): Boolean!
   updateFeedbackOnVideo(input: NewLikeVideo!): Boolean!
@@ -2041,6 +2055,36 @@ func (ec *executionContext) field_Mutation_updateSubscriber_args(ctx context.Con
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateVideoOnPlaylist_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["playlist_id"]; ok {
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["playlist_id"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["video_id"]; ok {
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["video_id"] = arg1
+	var arg2 model.UpdatePriority
+	if tmp, ok := rawArgs["input"]; ok {
+		arg2, err = ec.unmarshalNupdatePriority2yourJube_APIᚋgraphᚋmodelᚐUpdatePriority(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg2
 	return args, nil
 }
 
@@ -3627,6 +3671,47 @@ func (ec *executionContext) _Mutation_insertVideoOnPlaylist(ctx context.Context,
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_updateVideoOnPlaylist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "Mutation",
+		Field:    field,
+		Args:     nil,
+		IsMethod: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateVideoOnPlaylist_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateVideoOnPlaylist(rctx, args["playlist_id"].(string), args["video_id"].(string), args["input"].(model.UpdatePriority))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Mutation_updatePlaylist(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4842,7 +4927,7 @@ func (ec *executionContext) _PlaylistDetail_priority(ctx context.Context, field 
 	return ec.marshalNInt2int(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PlaylistDetail_videos(ctx context.Context, field graphql.CollectedField, obj *model.PlaylistDetail) (ret graphql.Marshaler) {
+func (ec *executionContext) _PlaylistDetail_video(ctx context.Context, field graphql.CollectedField, obj *model.PlaylistDetail) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -4853,13 +4938,13 @@ func (ec *executionContext) _PlaylistDetail_videos(ctx context.Context, field gr
 		Object:   "PlaylistDetail",
 		Field:    field,
 		Args:     nil,
-		IsMethod: true,
+		IsMethod: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.PlaylistDetail().Videos(rctx, obj)
+		return obj.Video, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8100,6 +8185,24 @@ func (ec *executionContext) unmarshalInputNewVideo(ctx context.Context, obj inte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputupdatePriority(ctx context.Context, obj interface{}) (model.UpdatePriority, error) {
+	var it model.UpdatePriority
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "priority":
+			var err error
+			it.Priority, err = ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -8430,6 +8533,11 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "updateVideoOnPlaylist":
+			out.Values[i] = ec._Mutation_updateVideoOnPlaylist(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "updatePlaylist":
 			out.Values[i] = ec._Mutation_updatePlaylist(ctx, field)
 			if out.Values[i] == graphql.Null {
@@ -8616,41 +8724,32 @@ func (ec *executionContext) _PlaylistDetail(ctx context.Context, sel ast.Selecti
 		case "playlist_id":
 			out.Values[i] = ec._PlaylistDetail_playlist_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "video_id":
 			out.Values[i] = ec._PlaylistDetail_video_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "priority":
 			out.Values[i] = ec._PlaylistDetail_priority(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
-		case "videos":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._PlaylistDetail_videos(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
-			})
+		case "video":
+			out.Values[i] = ec._PlaylistDetail_video(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "created_at":
 			out.Values[i] = ec._PlaylistDetail_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "updated_at":
 			out.Values[i] = ec._PlaylistDetail_updated_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9799,6 +9898,10 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNupdatePriority2yourJube_APIᚋgraphᚋmodelᚐUpdatePriority(ctx context.Context, v interface{}) (model.UpdatePriority, error) {
+	return ec.unmarshalInputupdatePriority(ctx, v)
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
