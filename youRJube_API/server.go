@@ -3,15 +3,16 @@ package main
 import (
 	"yourJube_API/graph"
 	"yourJube_API/graph/generated"
-	_"github.com/jinzhu/gorm/dialects/postgres"
-	"github.com/gin-gonic/gin"
-	_ "github.com/gin-gonic/gin"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	_ "github.com/gin-gonic/gin"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
-const defaultPort = ":8080"
+const defaultPort = ":5000"
 
 // Defining the Graphql handler
 func graphqlHandler() gin.HandlerFunc {
@@ -37,7 +38,7 @@ func main() {
 	r := gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"https://localhost:4200","http://localhost:4200"},
+		AllowOrigins:     []string{"https://localhost:4200", "http://localhost:4200"},
 		AllowMethods:     []string{"PUT", "PATCH", "OPTIONS", "GET", "POST"},
 		AllowHeaders:     []string{"Origin", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},

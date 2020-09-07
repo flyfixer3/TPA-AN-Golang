@@ -13,4 +13,5 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/vektah/gqlparser/v2 v2.0.1
 	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
+	gorm.io/gorm v1.20.0
 )

@@ -41,15 +41,31 @@ resolver:
 # your liking
 models:
   User:
-    model: D:\Alvin\TPA Web\TPA-Web\GoProject\src\youRJube_API\graph\model.User
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.User
+  Subscriber:
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.Subscriber
   Video:
-    model: D:\Alvin\TPA Web\TPA-Web\GoProject\src\youRJube_API\graph\model.Video
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.Video
   Location:
-    model: D:\Alvin\TPA Web\TPA-Web\GoProject\src\youRJube_API\graph\model.Location
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.Location
   Comment:
-    model: D:\Alvin\TPA Web\TPA-Web\GoProject\src\youRJube_API\graph\model.Comment
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.Comment
+  Playlist:
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.Playlist
   Timestamp:
-    model: D:\Alvin\TPA Web\TPA-Web\GoProject\src\youRJube_API\graph\model.Timestamp
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.Timestamp
+  LikeComment:
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.LikeComment
+  LikeVideo:
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.LikeVideo
+  LikePost:
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.LikePost
+  SavePlaylist:
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.SavePlaylist
+  PlaylistDetail:
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.PlaylistDetail
+  Post:
+    model: D:\Alvin\Website\GoProject\src\youRJube_API\graph\model.Post
   Int:
     model:
       - github.com/99designs/gqlgen/graphql.Int

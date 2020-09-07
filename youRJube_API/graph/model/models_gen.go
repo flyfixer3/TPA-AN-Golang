@@ -6,7 +6,58 @@ type NewComment struct {
 	UserID   string `json:"user_id"`
 	VideoID  string `json:"video_id"`
 	ParentID string `json:"parent_id"`
+	ReplyTo  string `json:"reply_to"`
 	Comment  string `json:"comment"`
+}
+
+type NewLikeComment struct {
+	UserID    string `json:"user_id"`
+	CommentID string `json:"comment_id"`
+	Status    bool   `json:"status"`
+}
+
+type NewLikePost struct {
+	UserID string `json:"user_id"`
+	PostID string `json:"post_id"`
+	Status bool   `json:"status"`
+}
+
+type NewLikeVideo struct {
+	UserID  string `json:"user_id"`
+	VideoID string `json:"video_id"`
+	Status  bool   `json:"status"`
+}
+
+type NewPlaylist struct {
+	UserID      string  `json:"user_id"`
+	Title       string  `json:"title"`
+	Description *string `json:"description"`
+	Private     bool    `json:"private"`
+	View        int     `json:"view"`
+}
+
+type NewPlaylistDetail struct {
+	PlaylistID string `json:"playlist_id"`
+	VideoID    string `json:"video_id"`
+	Priority   int    `json:"priority"`
+}
+
+type NewPost struct {
+	UserID      string  `json:"user_id"`
+	Title       string  `json:"title"`
+	Description *string `json:"description"`
+	Media       *string `json:"media"`
+}
+
+type NewSavePlaylist struct {
+	UserID     string `json:"user_id"`
+	PlaylistID string `json:"playlist_id"`
+}
+
+type NewSubscriber struct {
+	TargetID     string `json:"target_id"`
+	SubscriberID string `json:"subscriber_id"`
+	Notification bool   `json:"notification"`
 }
 
 type NewUser struct {

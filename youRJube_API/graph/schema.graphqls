@@ -9,7 +9,64 @@ type User{
   profile_pict:String!
   channel_background:String!
   premium:Boolean!  
+  subscribers:[Subscriber!]
+  save_playlists:[Playlist]
   created_at:Timestamp!
+  updated_at:Timestamp!
+}
+
+type Post{
+  id:String!
+	user_id:String!
+  title:String!
+	description:String
+  media:String
+  user:User!
+  like_post:[LikePost]!
+	created_at:Timestamp!
+  updated_at:Timestamp!
+}
+
+input NewPost{
+  user_id:String!
+  title:String!
+	description:String
+  media:String
+}
+
+type Subscriber{
+  id:String!
+  target_id:String!
+  subscriber_id:String!
+  notification:Boolean!
+  target:User!
+  created_at:Timestamp!
+  updated_at:Timestamp!
+}
+
+type LikeComment{
+  id:String!
+	user_id:String!
+	comment_id:String!
+	status:Boolean!
+	created_at:Timestamp!
+  updated_at:Timestamp!
+}
+
+type LikeVideo{
+  id:String!
+	user_id:String!
+	video_id:String!
+	status:Boolean!
+	created_at:Timestamp!
+  updated_at:Timestamp!
+}
+type LikePost{
+  id:String!
+	user_id:String!
+	post_id:String!
+	status:Boolean!
+	created_at:Timestamp!
   updated_at:Timestamp!
 }
 
@@ -19,16 +76,66 @@ type Comment{
   video_id:String!
   parent_id:String!
   user:User!
+  reply_to:String!
   comment:String!
+  like_comment:[LikeComment!]
   created_at:Timestamp!
   updated_at:Timestamp!
+}
+type Playlist{
+  id:String!
+  user_id:String!
+  title:String!
+  description:String
+  private:Boolean!
+  view:Int!
+  user:User!
+  videos:[Video]
+  created_at:Timestamp!
+  updated_at:Timestamp!
+}
+
+input NewPlaylist{
+  user_id:String!
+  title:String!
+  description:String
+  private:Boolean!
+  view:Int!
+}
+
+input NewSavePlaylist{
+  user_id:String!
+  playlist_id:String!
 }
 
 input NewComment{
   user_id:String!
   video_id:String!
   parent_id:String!
+  reply_to:String!
   comment:String!
+}
+
+input NewLikeComment{
+  user_id:String!
+	comment_id:String!
+	status:Boolean!
+}
+
+input NewLikeVideo{
+  user_id:String!
+	video_id:String!
+	status:Boolean!
+}
+input NewLikePost{
+  user_id:String!
+	post_id:String!
+	status:Boolean!
+}
+input NewSubscriber{
+  target_id:String!
+	subscriber_id:String!
+	notification:Boolean!
 }
 
 input NewUser{
@@ -56,7 +163,23 @@ type Video{
   description:String
   restriction:String!
   view:Int!
+  duration:Int!
+  like_video:[LikeVideo!]
   created_at:Timestamp!
+  updated_at:Timestamp!
+}
+
+input NewPlaylistDetail{
+  playlist_id:String!
+	video_id:String!
+  priority:Int!
+}
+type PlaylistDetail{
+  playlist_id:String!
+	video_id:String!
+	priority:Int!    
+  videos:Video!
+	created_at:Timestamp!
   updated_at:Timestamp!
 }
 
@@ -73,12 +196,37 @@ input NewVideo {
 
 type Query{
   videos: [Video]
-  findUser(email:String!): User
+  findUser(email:String!): [User]
+  findUserById(id:String!): [User]
+  findPostByUserId(user_id:String!): [Post]
+  findPlaylistByUserId(id:String!):[Playlist]
+  getVideoPriorityByPlaylistId(playlist_id:String!):[PlaylistDetail]
   users: [User]
+  getLikesByCommentId(id:String!):[LikeComment]
   commentsByVideoId(id:String!):[Comment]
 }
 
 type Mutation{
+  createFeedBackOnComment(input: NewLikeComment!): LikeComment!
+  createFeedBackOnVideo(input: NewLikeVideo!): LikeVideo!
+  createFeedBackOnPost(input: NewLikePost!): LikePost!  
+  createSubscriber(input: NewSubscriber!): Subscriber!  
+  createPlaylist(input: NewPlaylist!): Playlist!  
+  createPost(input: NewPost!): Post! 
+  createSavePlaylist(playlist_id:String!, user_id:String!): Boolean! 
+  insertVideoOnPlaylist(input: NewPlaylistDetail!): Boolean! 
+  updatePlaylist(playlist_id:String!, input: NewPlaylist!): Boolean!
+  updateFeedbackOnComment(input: NewLikeComment!): Boolean!
+  updateFeedbackOnVideo(input: NewLikeVideo!): Boolean!
+  updateFeedbackOnPost(input: NewLikePost!): Boolean!
+  updateSubscriber(input: NewSubscriber!): Boolean!
+  deletePlaylist(playlist_id:String!):Boolean!
+  deleteSavePlaylist(playlist_id:String!, user_id:String!): Boolean! 
+  deleteVideoOnPlaylist(playlist_id:String!, video_id:String!): Boolean!
+  deleteFeedbackOnComment(user_id:String!, comment_id:String!): Boolean!
+  deleteFeedbackOnVideo(user_id:String!, video_id:String!): Boolean!
+  deleteFeedbackOnPost(user_id:String!, post_id:String!): Boolean!
+  deleteSubscriber(target_id:String!, subscriber_id:String!): Boolean!
   createUser(input: NewUser!): User!
   createVideo(input: NewVideo!): Video!
   updateVideo(id:String!, input: NewVideo!): Video!
